@@ -7,14 +7,24 @@ $lilurl = new lilURL();
 $msg = '';
 
 // if the form has been submitted
-if ( isset($_POST['longurl']) )
+if ( Isset($_POST['longurl']) )
 {
 	// escape bad characters from the user's url
 	$longurl = trim(mysql_escape_string($_POST['longurl']));
+	$manual_id = preg_replace('/[^a-zA-Z0-9]/', '', $_POST['manual_id']);  // only allow a-zA-Z0-9 as characters in id
 
 	// set the protocol to not ok by default
 	$protocol_ok = false;
-	
+	$string_ok = false;
+	$url_len_ok = false;
+	$manual_id_len_ok = false;
+
+	$url_len = strlen($longurl);
+	$url_len_ok = (29 < $url_len && $url_len < 220);
+
+	$manual_id_len = strlen($manual_id);
+	$manual_id_len_ok = ($manual_id_len < 25);
+
 	// if there's a list of allowed protocols, 
 	// check to make sure that the user's url uses one of them
 	if ( count($allowed_protocols) )
@@ -32,24 +42,62 @@ if ( isset($_POST['longurl']) )
 	{
 		$protocol_ok = true;
 	}
-		
-	// add the url to the database
-	if ( $protocol_ok && $lilurl->add_url($longurl) )
+
+	// if there's a list of allowed strings, check to make sure they are included in the URL
+	if(count($allowed_strings))
+	{
+		foreach ($allowed_strings as $as)
+		{
+			if ( strpos  ( strtolower($longurl), strtolower($as)))
+			{
+				$string_ok = true;
+				break;
+			}
+		}
+	}
+	else	// no strings to check so don't worry
+	{
+		$string_ok = true;
+	}
+
+
+	// errorcheckin'
+	if (!$url_len_ok)
+	{
+		$msg = '<p class="error">You call that a URL???</p>';
+	}
+	elseif (!$manual_id_len_ok)
+	{
+		$msg = '<p class="error">ids are meant to be short!</p>';
+	}
+	elseif (!$string_ok)
+	{
+		$msg = "<p class='error'>Sorry!  URLs only work for specific cases, such as $allowed_strings[0]</p>";
+	}
+	elseif ( !$protocol_ok )
+	{
+		$msg = '<p class="error">Invalid protocol!</p>';
+	}	
+
+	// Looks good above!  Add the url to the database
+	elseif ( $protocol_ok && $string_ok && $lilurl->add_url($longurl,$manual_id,$msg) )
 	{
 		if ( REWRITE ) // mod_rewrite style link
 		{
-			$url = 'http://'.$_SERVER['SERVER_NAME'].dirname($_SERVER['PHP_SELF']).'/'.$lilurl->get_id($longurl);
+			$url = 'http://'.$_SERVER['SERVER_NAME'].dirname($_SERVER['PHP_SELF']).$lilurl->get_id($longurl);
 		}
 		else // regular GET style link
 		{
 			$url = 'http://'.$_SERVER['SERVER_NAME'].$_SERVER['PHP_SELF'].'?id='.$lilurl->get_id($longurl);
 		}
 
-		$msg = '<p class="success">Your lil&#180; URL is: <a href="'.$url.'">'.$url.'</a></p>';
-	}
-	elseif ( !$protocol_ok )
-	{
-		$msg = '<p class="error">Invalid protocol!</p>';
+		// if there's a $msg returned by add_url, it was a non-critical error.  pass it on.
+		if($msg)
+		{ 
+			$msg = "<p class='error'>" . $msg . "</p>";
+		}
+
+		$msg .= '<p class="success">Your lil&#180; URL is: <a href="'.$url.'">'.$url.'</a></p>';
 	}
 	else
 	{
@@ -62,6 +110,10 @@ else // if the form hasn't been submitted, look for an id to redirect to
 	{
 		$id = mysql_escape_string($_GET['id']);
 	}
+	if ( isSet($_POST['id']) ) // check POST as well
+	{
+		$id = mysql_escape_string($_POST['id']);
+	}
 	elseif ( REWRITE ) // check the URI if we're using mod_rewrite
 	{
 		$explodo = explode('/', $_SERVER['REQUEST_URI']);
@@ -72,7 +124,7 @@ else // if the form hasn't been submitted, look for an id to redirect to
 		$id = '';
 	}
 	
-	// if the id isn't empty and it's not this file, redirect to it's url
+	// if the id isn't empty and it's not this file, redirect to its url
 	if ( $id != '' && $id != basename($_SERVER['PHP_SELF']) )
 	{
 		$location = $lilurl->get_url($id);
@@ -88,6 +140,9 @@ else // if the form hasn't been submitted, look for an id to redirect to
 	}
 }
 
+// after all that, look up the next default id
+$next_id = $lilurl->get_next_id();
+
 // print the form
 
 ?>
@@ -96,7 +151,6 @@ else // if the form hasn't been submitted, look for an id to redirect to
      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 
 <html>
-
 	<head>
 		<title><?php echo PAGE_TITLE; ?></title>
 		
@@ -132,7 +186,7 @@ else // if the form hasn't been submitted, look for an id to redirect to
 		fieldset {
 			border: 0;
 			margin: 0;
-			padding: 0;
+			padding: 0.5em;
 		}
 		
 		a {
@@ -177,9 +231,25 @@ else // if the form hasn't been submitted, look for an id to redirect to
 			<fieldset>
 				<label for="longurl">Enter a long URL:</label>
 				<input type="text" name="longurl" id="longurl" />
+			</fieldset>
+			<fieldset>
+				<label for="manual_id">Desired short id:</label>
+				<input type="text" name="manual_id" id="manual_id" /> next: <?=$next_id?>
+			</fieldset>
+			<fieldset>
 				<input type="submit" name="submit" id="submit" value="Make it lil&#180;!" />
 			</fieldset>
 		
+		</form>&nbsp;
+
+		<form action="<?php echo $_SERVER['PHP_SELF']?>" method="post">
+
+			<fieldset>
+				<label for="id">Or enter an id:</label>
+				<input type="text" name="id" id="id" />
+				<input type="submit" name="submit" id="submit" value="Find its URL!" />
+			</fieldset>
+
 		</form>
 
 		<h4>Powered by <a href="http://lilurl.sourceforge.net">lilURL</a></h4>

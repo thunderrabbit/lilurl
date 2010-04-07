@@ -1,7 +1,14 @@
-lilURL 0.1.1 http://lilurl.sourceforge.net
+lilURL 0.1.2  
+
+http://github.com/thunderrabbit/lilurl
 
 lilURL is a simple PHP/MySQL app that works basically like tinyurl.com,
 allowing you to create shortcuts on your own server.
+
+Thanks to http://github.com/gbremer/lilurl for importing into git
+
+Copied from original lilURL 0.1.1 http://lilurl.sourceforge.net
+
 
 -----------------------------------------------------------------------
 
@@ -13,7 +20,7 @@ To install:
 
       (( like so:
       
-         mysql -u <lilurl_user> -p <lilurl_db> < lilurl.sql
+         mysql -u [lilurl_user] -p [lilurl_db] < lilurl.sql
       
       ))
 
@@ -27,5 +34,3 @@ To install:
          RewriteRule (.*) index.php
    
         should suffice ))
-
-5. Buy 15 donuts and eat them all in one sitting.

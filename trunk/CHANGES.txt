@@ -1,0 +1,11 @@
+lilURL 0.1.2
+
+* added ability to allow user to specify the short URL
+* added ability to restrict to only certain domains (via string compare)
+
+--------------------------------------------------------------------------------
+lilURL 0.1.1
+
+lilURL is a simple PHP/MySQL app that works basically like tinyurl.com,
+allowing you to create shortcuts on your own server.
+

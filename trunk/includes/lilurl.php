@@ -45,7 +45,7 @@ class lilURL
 	}
 	
 	// add a url to the database
-	function add_url($url)
+	function add_url($url, $manual_id = NULL, &$msg = NULL)
 	{
 		// check to see if the url's already in there
 		$id = $this->get_id($url);
@@ -53,12 +53,40 @@ class lilURL
 		// if it is, return true
 		if ( $id != -1 )
 		{
+			$msg = "That URL already has a lil' URL:";
 			return true;
 		}
 		else // otherwise, put it in
 		{
-			$id = $this->get_next_id($this->get_last_id());
-			$q = 'INSERT INTO '.URL_TABLE.' (id, url, date) VALUES ("'.$id.'", "'.$url.'", NOW())';
+		
+			if($manual_id)
+			{
+				if($this->get_url($manual_id) == -1)
+				{
+					$manual = 'true';
+				}
+				else
+				{
+					$msg = $manual_id . " already used in DB.";
+					$manual = 'false';
+				}
+			}
+			else
+			{
+				$manual = 'false';
+			}
+
+			// according to what happened above, test to see if we will use the user-provided manual_id or not
+			if($manual == 'true')
+			{
+				$id = $manual_id;
+			}
+			else
+			{
+				$id = $this->get_next_id();
+			}
+
+			$q = 'INSERT INTO '.URL_TABLE.' (id, url, manual, date) VALUES ("'.$id.'", "'.$url.'", "'.$manual.'", NOW())';
 
 			return mysql_query($q);
 		}
@@ -67,7 +95,7 @@ class lilURL
 	// return the most recent id (or -1 if no ids exist)
 	function get_last_id()
 	{	
-		$q = 'SELECT id FROM '.URL_TABLE.' ORDER BY date DESC LIMIT 1';
+		$q = 'SELECT id FROM '.URL_TABLE.' where manual = "false" ORDER BY date DESC   LIMIT 1';
 		$result = mysql_query($q);
 
 		if ( mysql_num_rows($result) )
@@ -82,9 +110,15 @@ class lilURL
 	}	
 
 	// return the next id
-	function get_next_id($last_id)
-	{ 
-	
+	function get_next_id($last_id = NULL)
+	{
+
+		// if the last id is NULL(not sent), then look to DB
+		if($last_id == NULL)
+		{
+			$last_id = $this->get_Last_id();
+		}
+
 		// if the last id is -1 (non-existant), start at the begining with 0
 		if ( $last_id == -1 )
 		{
@@ -179,4 +213,10 @@ class lilURL
 
 }
 
+function print_rob($what)
+{
+	echo "<pre>";
+	print_r($what);
+	echo "</pre>";
+}
 ?>
