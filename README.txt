@@ -25,7 +25,8 @@ To install:
       
       ))
 
-3. Edit the configuration file includes/conf.php to suit your needs.
+3. in the includes/ directory: $  cp conf.php-sample conf.php; cp mysql.php-sample mysql.php
+   Edit the configuration files mysql.php and conf.php to suit your needs.
 
 4. Set up mod_rewrite, if necessary
 

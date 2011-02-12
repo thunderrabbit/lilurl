@@ -3,14 +3,7 @@
 // page title
 define('PAGE_TITLE', 'lil&#180; URL Generator');
 
-// MySQL connection info
-define('MYSQL_USER', 'username');
-define('MYSQL_PASS', 'password');
-define('MYSQL_DB', 'dbname');
-define('MYSQL_HOST', 'localhost');
-
-// MySQL tables
-define('URL_TABLE', 'lil_urls');
+require_once 'mysql.php';	// separate file so I can use just the DB info for a mediawiki extension that talks to this table
 
 // use mod_rewrite?
 define('REWRITE', true);
