@@ -1,3 +1,5 @@
+<?
+
 // MySQL connection info
 define('MYSQL_USER', 'username');
 define('MYSQL_PASS', 'password');
@@ -7,3 +9,4 @@ define('MYSQL_HOST', 'localhost');
 // MySQL tables
 define('URL_TABLE', 'lil_urls');
 
+?>
