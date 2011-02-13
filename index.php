@@ -6,63 +6,81 @@ require_once 'includes/lilurl.php'; // <- lilURL class file
 $lilurl = new lilURL();
 $msg = '';
 
+$alphanum_filter = array(
+    'options' => array(
+        'regexp' =>  "%[a-zA-Z0-9]*%"
+    ),
+);
+
 // if the form has been submitted
-if ( Isset($_POST['longurl']) )
+if ( isset($_POST['longurl']) )
 {
-	// escape bad characters from the user's url
-	$longurl = trim(mysql_escape_string($_POST['longurl']));
-	$manual_id = preg_replace('/[^a-zA-Z0-9]/', '', $_POST['manual_id']);  // only allow a-zA-Z0-9 as characters in id
-
-	// set the protocol to not ok by default
-	$protocol_ok = false;
-	$string_ok = false;
-	$url_len_ok = false;
-	$manual_id_len_ok = false;
-
-	$url_len = strlen($longurl);
-	$url_len_ok = (29 < $url_len && $url_len < 220);
-
-	$manual_id_len = strlen($manual_id);
-	$manual_id_len_ok = ($manual_id_len < 25);
-
-	// if there's a list of allowed protocols, 
-	// check to make sure that the user's url uses one of them
-	if ( count($allowed_protocols) )
+	$longurl = filter_input(INPUT_POST, 'longurl', FILTER_VALIDATE_URL);
+	if(empty($longurl))
 	{
-		foreach ( $allowed_protocols as $ap )
-		{
-			if ( strtolower(substr($longurl, 0, strlen($ap))) == strtolower($ap) )
-			{
-				$protocol_ok = true;
-				break;
-			}
-		}
+		$url_ok = false;
 	}
-	else // if there's no protocol list, screw all that
+	else
 	{
-		$protocol_ok = true;
-	}
+		$url_ok = true;
+	    	// escape bad characters from the user's url
+	    	$mysql_safe_longurl = trim(mysql_escape_string($longurl));
+	        $id = filter_input(INPUT_POST, 'manual_id', FILTER_VALIDATE_REGEXP, $alphanum_filter);
 
-	// if there's a list of allowed strings, check to make sure they are included in the URL
-	if(count($allowed_strings))
-	{
-		foreach ($allowed_strings as $as)
-		{
-			if ( strpos  ( strtolower($longurl), strtolower($as)))
-			{
-				$string_ok = true;
-				break;
-			}
-		}
-	}
-	else	// no strings to check so don't worry
-	{
-		$string_ok = true;
-	}
+	    	// set the protocol to not ok by default
+	    	$protocol_ok = false;
+	    	$string_ok = false;
+	    	$url_len_ok = false;
+	    	$manual_id_len_ok = false;
 
+	    	$url_len = strlen($mysql_safe_longurl);
+	    	$url_len_ok = (29 < $url_len && $url_len < 220);
+
+	    	$manual_id_len = strlen($manual_id);
+	    	$manual_id_len_ok = ($manual_id_len < 25);
+
+	    	// if there's a list of allowed protocols, 
+	    	// check to make sure that the user's url uses one of them
+	    	if ( count($allowed_protocols) )
+	    	{
+	    		foreach ( $allowed_protocols as $ap )
+	    		{
+	    			if ( strtolower(substr($mysql_safe_longurl, 0, strlen($ap))) == strtolower($ap) )
+	    			{
+	    				$protocol_ok = true;
+	    				break;
+	    			}
+	    		}
+	    	}
+	    	else // if there's no protocol list, screw all that
+	    	{
+	    		$protocol_ok = true;
+	    	}
+
+	    	// if there's a list of allowed strings, check to make sure they are included in the URL
+	    	if(count($allowed_strings))
+	    	{
+	    		foreach ($allowed_strings as $as)
+	    		{
+	    			if ( strpos  ( strtolower($mysql_safe_longurl), strtolower($as)))
+	    			{
+	    				$string_ok = true;
+	    				break;
+	    			}
+	    		}
+	    	}
+	    	else	// no strings to check so don't worry
+	    	{
+	    		$string_ok = true;
+	    	}
+	}
 
 	// errorcheckin'
-	if (!$url_len_ok)
+	if (!$url_ok)
+	{
+		$msg = '<p class="error">Invalid URL</p>';
+	}
+	elseif (!$url_len_ok)
 	{
 		$msg = '<p class="error">You call that a URL???</p>';
 	}
@@ -106,24 +124,33 @@ if ( Isset($_POST['longurl']) )
 }
 else // if the form hasn't been submitted, look for an id to redirect to
 {
-	if ( isSet($_GET['id']) ) // check GET first
+	if ( isset($_GET['id']) ) // check GET first
 	{
-		$id = mysql_escape_string($_GET['id']);
+	        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_REGEXP, $alphanum_filter);
+		if(!empty($id))
+		  {
+		    $id = mysql_escape_string($id);
+		  }
 	}
-	if ( isSet($_POST['id']) ) // check POST as well
+	elseif ( isset($_POST['id']) ) // check POST as well
 	{
-		$id = mysql_escape_string($_POST['id']);
+	        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_REGEXP, $alphanum_filter);
+		if(!empty($id))
+		  {
+		    $id = mysql_escape_string($id);
+		  }
 	}
 	elseif ( REWRITE ) // check the URI if we're using mod_rewrite
 	{
 		$explodo = explode('/', $_SERVER['REQUEST_URI']);
-		$id = mysql_escape_string($explodo[count($explodo)-1]);
+		$id = filter_var($explodo[count($explodo)-1], FILTER_VALIDATE_REGEXP, $alphanum_filter);
+		$id = mysql_escape_string($id);
 	}
 	else // otherwise, just make it empty
 	{
 		$id = '';
 	}
-	
+
 	// if the id isn't empty and it's not this file, redirect to its url
 	if ( $id != '' && $id != basename($_SERVER['PHP_SELF']) )
 	{
@@ -227,7 +254,6 @@ $next_id = $lilurl->get_next_id();
 		<?php echo $msg; ?>
 		
 		<form action="<?php echo $_SERVER['PHP_SELF']?>" method="post">
-		
 			<fieldset>
 				<label for="longurl">Enter a long URL:</label>
 				<input type="text" name="longurl" id="longurl" />
@@ -239,22 +265,15 @@ $next_id = $lilurl->get_next_id();
 			<fieldset>
 				<input type="submit" name="submit" id="submit" value="Make it lil&#180;!" />
 			</fieldset>
-		
 		</form>&nbsp;
 
 		<form action="<?php echo $_SERVER['PHP_SELF']?>" method="post">
-
 			<fieldset>
 				<label for="id">Or enter an id:</label>
 				<input type="text" name="id" id="id" />
 				<input type="submit" name="submit" id="submit" value="Find its URL!" />
 			</fieldset>
-
 		</form>
-
-		<h4>Powered by <a href="http://lilurl.sourceforge.net">lilURL</a></h4>
-	
+		<h4>Powered by a <a href="https://github.com/thunderrabbit/lilurl/">modified</a> version of <a href="http://lilurl.sourceforge.net">lilURL</a></h4>
 	</body>
-
 </html>
-		
