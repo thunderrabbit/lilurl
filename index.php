@@ -25,7 +25,7 @@ if ( isset($_POST['longurl']) )
 		$url_ok = true;
 	    	// escape bad characters from the user's url
 	    	$mysql_safe_longurl = trim(mysql_escape_string($longurl));
-	        $id = filter_input(INPUT_POST, 'manual_id', FILTER_VALIDATE_REGEXP, $alphanum_filter);
+	        $manual_id = filter_input(INPUT_POST, 'manual_id', FILTER_VALIDATE_REGEXP, $alphanum_filter);
 
 	    	// set the protocol to not ok by default
 	    	$protocol_ok = false;
