@@ -24,7 +24,7 @@ if ( isset($_POST['longurl']) )
 	{
 		$url_ok = true;
 	    	// escape bad characters from the user's url
-	    	$mysql_safe_longurl = trim(mysql_escape_string($longurl));
+	    	$mysql_safe_longurl = trim(mysql_real_escape_string($longurl));
 	        $manual_id = filter_input(INPUT_POST, 'manual_id', FILTER_VALIDATE_REGEXP, $alphanum_filter);
 
 	    	// set the protocol to not ok by default
@@ -129,7 +129,7 @@ else // if the form hasn't been submitted, look for an id to redirect to
 	        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_REGEXP, $alphanum_filter);
 		if(!empty($id))
 		  {
-		    $id = mysql_escape_string($id);
+		    $id = mysql_real_escape_string($id);
 		  }
 	}
 	elseif ( isset($_POST['id']) ) // check POST as well
@@ -137,14 +137,14 @@ else // if the form hasn't been submitted, look for an id to redirect to
 	        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_REGEXP, $alphanum_filter);
 		if(!empty($id))
 		  {
-		    $id = mysql_escape_string($id);
+		    $id = mysql_real_escape_string($id);
 		  }
 	}
 	elseif ( REWRITE ) // check the URI if we're using mod_rewrite
 	{
 		$explodo = explode('/', $_SERVER['REQUEST_URI']);
 		$id = filter_var($explodo[count($explodo)-1], FILTER_VALIDATE_REGEXP, $alphanum_filter);
-		$id = mysql_escape_string($id);
+		$id = mysql_real_escape_string($id);
 	}
 	else // otherwise, just make it empty
 	{
