@@ -12,8 +12,8 @@ Thanks to http://github.com/gbremer for importing into github  http://github.com
 -----------------------------------------------------------------------
 
 To install:
-0. $ git clone git@github.com:thunderrabbit/lilurl.git [site_root_dir_name]
-   For me, that is $ git clone git@github.com:thunderrabbit/lilurl.git ~/art.robnugen.com
+0. $ git clone https://github.com/thunderrabbit/lilurl.git [site_root_dir_name]
+   For me, that is $ git clone https://github.com/thunderrabbit/lilurl.git ~/art.robnugen.com
 
 1. Create a MySQL database and user for lilURL. 
 
