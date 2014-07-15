@@ -2,23 +2,25 @@
 
 class lilURL
 {
+	private $mysqli;
+
 	// constructor
 	function lilURL()
 	{
 		// open mysql connection
-		mysql_connect(MYSQL_HOST, MYSQL_USER, MYSQL_PASS) or die('Could not connect to database');
-		mysql_select_db(MYSQL_DB) or die('Could not select database');	
+		$this->mysqli = mysqli_connect(MYSQL_HOST, MYSQL_USER, MYSQL_PASS, MYSQL_DB) or die('Could not connect to database');
 	}
 
 	// return the id for a given url (or -1 if the url doesn't exist)
 	function get_id($url)
 	{
-		$q = 'SELECT id FROM '.URL_TABLE.' WHERE (url="'.$url.'")';
-		$result = mysql_query($q);
 
-		if ( mysql_num_rows($result) )
-		{
-			$row = mysql_fetch_array($result);
+		$url = mysqli_real_escape_string($this->mysqli,$url);
+		$q = 'SELECT id FROM '.URL_TABLE.' WHERE (url="'.$url.'")';
+		$result = mysqli_query($this->mysqli,$q);
+
+		if($result && mysqli_num_rows($result)) {
+			$row = mysqli_fetch_array($result);
 			return $row['id'];
 		}
 		else
@@ -30,12 +32,12 @@ class lilURL
 	// return the url for a given id (or -1 if the id doesn't exist)
 	function get_url($id)
 	{
+		$id = mysqli_real_escape_string($this->mysqli,$id);
 		$q = 'SELECT url FROM '.URL_TABLE.' WHERE (id="'.$id.'")';
-		$result = mysql_query($q);
+		$result = mysqli_query($this->mysqli,$q);
 
-		if ( mysql_num_rows($result) )
-		{
-			$row = mysql_fetch_array($result);
+		if($result && mysqli_num_rows($result)) {
+			$row = mysqli_fetch_array($result);
 			return $row['url'];
 		}
 		else
@@ -45,50 +47,41 @@ class lilURL
 	}
 	
 	// add a url to the database
-	function add_url($url, $manual_id = NULL, &$msg = NULL)
-	{
+	function add_url($url, $manual_id = NULL, &$msg = NULL)	{
 		// check to see if the url's already in there
-		$id = $this->get_id($url);
+		$existing_id = $this->get_id($url);
 		
 		// if it is, return true
-		if ( $id != -1 )
-		{
+		if ( $existing_id != -1 ) {
 			$msg = "That URL already has a lil' URL:";
 			return true;
-		}
-		else // otherwise, put it in
-		{
+		} else {
+		        // otherwise, put it in
 		
-			if($manual_id)
-			{
-				if($this->get_url($manual_id) == -1)
-				{
+			if($manual_id) {
+				if($this->get_url($manual_id) == -1) {
 					$manual = 'true';
-				}
-				else
-				{
+				} else {
 					$msg = $manual_id . " already used in DB.";
 					$manual = 'false';
 				}
-			}
-			else
-			{
+			} else {
 				$manual = 'false';
 			}
 
 			// according to what happened above, test to see if we will use the user-provided manual_id or not
-			if($manual == 'true')
-			{
-				$id = $manual_id;
-			}
-			else
-			{
-				$id = $this->get_next_id();
+			if($manual == 'true') {
+				$new_id = $manual_id;
+			} else {
+				$new_id = $this->get_next_id();
 			}
 
-			$q = 'INSERT INTO '.URL_TABLE.' (id, url, manual, date) VALUES ("'.$id.'", "'.$url.'", "'.$manual.'", NOW())';
+			$new_id = mysqli_real_escape_string($this->mysqli,$new_id);
+			$url = mysqli_real_escape_string($this->mysqli,$url);
 
-			return mysql_query($q);
+			$q = 'INSERT INTO '.URL_TABLE.' (id, url, manual, date) VALUES ("'.$new_id.'", "'.$url.'", "'.$manual.'", NOW())';
+
+			return mysqli_query($this->mysqli,$q);
 		}
 	}
 
@@ -96,11 +89,11 @@ class lilURL
 	function get_last_id()
 	{	
 		$q = 'SELECT id FROM '.URL_TABLE.' where manual = "false" ORDER BY date DESC   LIMIT 1';
-		$result = mysql_query($q);
+		$result = mysqli_query($this->mysqli,$q);
 
-		if ( mysql_num_rows($result) )
+		if ($result && mysqli_num_rows($result) )
 		{
-			$row = mysql_fetch_array($result);
+			$row = mysqli_fetch_array($result);
 			return $row['id'];
 		}
 		else
@@ -114,18 +107,14 @@ class lilURL
 	{
 
 		// if the last id is NULL(not sent), then look to DB
-		if($last_id == NULL)
-		{
+		if($last_id == NULL) {
 			$last_id = $this->get_Last_id();
 		}
 
 		// if the last id is -1 (non-existant), start at the begining with 0
-		if ( $last_id == -1 )
-		{
+		if ( $last_id == -1 ) {
 			$next_id = 0;
-		}
-		else
-		{
+		} else {
 			// loop through the id string until we find a character to increment
 			for ( $x = 1; $x <= strlen($last_id); $x++ )
 			{
@@ -151,11 +140,12 @@ class lilURL
 		//
 		// (this is basically a failsafe to get around the potential dangers of
 		//  my kludgey use of a timestamp to pick the most recent id)
+
+		$next_id = mysqli_real_escape_string($this->mysqli,$next_id);
 		$q = 'SELECT id FROM '.URL_TABLE.' WHERE (id="'.$next_id.'")';
-		$result = mysql_query($q);
+		$result = mysqli_query($this->mysqli, $q);
 		
-		if ( mysql_num_rows($result) )
-		{
+		if($result && mysqli_num_rows($result)) {
 			$next_id = $this->get_next_id($next_id);
 		}
 
@@ -165,8 +155,7 @@ class lilURL
 	// make every character in the string 0, and then add an additional 0 to that
 	function append_id($id)
 	{
-		for ( $x = 0; $x < strlen($id); $x++ )
-		{
+		for ( $x = 0; $x < strlen($id); $x++ ) {
 			$id[$x] = 0;
 		}
 
