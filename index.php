@@ -23,8 +23,8 @@ if ( isset($_POST['longurl']) )
 	else
 	{
 		$url_ok = true;
-	    	// escape bad characters from the user's url
-	    	$mysql_safe_longurl = trim(mysql_real_escape_string($longurl));
+
+	    	$longurl = trim($longurl);
 	        $manual_id = filter_input(INPUT_POST, 'manual_id', FILTER_VALIDATE_REGEXP, $alphanum_filter);
 
 	    	// set the protocol to not ok by default
@@ -33,7 +33,7 @@ if ( isset($_POST['longurl']) )
 	    	$url_len_ok = false;
 	    	$manual_id_len_ok = false;
 
-	    	$url_len = strlen($mysql_safe_longurl);
+	    	$url_len = strlen($longurl);
 	    	$url_len_ok = (29 < $url_len && $url_len < 220);
 
 	    	$manual_id_len = strlen($manual_id);
@@ -45,7 +45,7 @@ if ( isset($_POST['longurl']) )
 	    	{
 	    		foreach ( $allowed_protocols as $ap )
 	    		{
-	    			if ( strtolower(substr($mysql_safe_longurl, 0, strlen($ap))) == strtolower($ap) )
+	    			if ( strtolower(substr($longurl, 0, strlen($ap))) == strtolower($ap) )
 	    			{
 	    				$protocol_ok = true;
 	    				break;
@@ -62,7 +62,7 @@ if ( isset($_POST['longurl']) )
 	    	{
 	    		foreach ($allowed_strings as $as)
 	    		{
-	    			if ( strpos  ( strtolower($mysql_safe_longurl), strtolower($as)))
+	    			if ( strpos  ( strtolower($longurl), strtolower($as)))
 	    			{
 	    				$string_ok = true;
 	    				break;
@@ -127,24 +127,24 @@ else // if the form hasn't been submitted, look for an id to redirect to
 	if ( isset($_GET['id']) ) // check GET first
 	{
 	        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_REGEXP, $alphanum_filter);
-		if(!empty($id))
-		  {
-		    $id = mysql_real_escape_string($id);
-		  }
+//		if(!empty($id))
+//		  {
+//		    $id = mysql_real_escape_string($id);
+//		  }
 	}
 	elseif ( isset($_POST['id']) ) // check POST as well
 	{
 	        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_REGEXP, $alphanum_filter);
-		if(!empty($id))
-		  {
-		    $id = mysql_real_escape_string($id);
-		  }
+//		if(!empty($id))
+//		  {
+//		    $id = mysql_real_escape_string($id);
+//		  }
 	}
 	elseif ( REWRITE ) // check the URI if we're using mod_rewrite
 	{
 		$explodo = explode('/', $_SERVER['REQUEST_URI']);
 		$id = filter_var($explodo[count($explodo)-1], FILTER_VALIDATE_REGEXP, $alphanum_filter);
-		$id = mysql_real_escape_string($id);
+//		$id = mysql_real_escape_string($id);
 	}
 	else // otherwise, just make it empty
 	{
