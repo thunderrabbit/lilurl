@@ -102,11 +102,11 @@ if ( isset($_POST['longurl']) )
 	{
 		if ( REWRITE ) // mod_rewrite style link
 		{
-			$url = 'http://'.$_SERVER['SERVER_NAME'].dirname($_SERVER['PHP_SELF']).$lilurl->get_id($longurl);
+			$url = 'https://'.$_SERVER['SERVER_NAME'].dirname($_SERVER['PHP_SELF']).$lilurl->get_id($longurl);
 		}
 		else // regular GET style link
 		{
-			$url = 'http://'.$_SERVER['SERVER_NAME'].$_SERVER['PHP_SELF'].'?id='.$lilurl->get_id($longurl);
+			$url = 'https://'.$_SERVER['SERVER_NAME'].$_SERVER['PHP_SELF'].'?id='.$lilurl->get_id($longurl);
 		}
 
 		// if there's a $msg returned by add_url, it was a non-critical error.  pass it on.
