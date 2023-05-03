@@ -5,7 +5,7 @@ class lilURL
 	private $mysqli;
 
 	// constructor
-	function lilURL()
+	function __construct()
 	{
 		// open mysql connection
 		$this->mysqli = mysqli_connect(MYSQL_HOST, MYSQL_USER, MYSQL_PASS, MYSQL_DB) or die('Could not connect to database');
