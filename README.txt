@@ -1,4 +1,4 @@
-lilURL 0.1.2  
+lilURL 0.1.3
 
 http://github.com/thunderrabbit/lilurl
 

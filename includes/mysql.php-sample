@@ -8,5 +8,3 @@ define('MYSQL_HOST', 'localhost');
 
 // MySQL tables
 define('URL_TABLE', 'lil_urls');
-
-?>
